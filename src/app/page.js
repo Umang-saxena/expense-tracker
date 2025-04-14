@@ -46,12 +46,32 @@ const categories = ["Food", "Transport", "Entertainment", "Bills", "Other"];
 
 // Define the form schema for transactions
 const formSchema = z.object({
-  date: z.string().nonempty({ message: "Date is required." }),
+  date: z
+    .string()
+    .nonempty({ message: "Date is required." })
+    .refine(
+      (date) => {
+        const inputDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize to start of day
+        return inputDate <= today;
+      },
+      { message: "Date cannot be in the future." }
+    ),
   category: z.enum(categories, {
     message: "Please select a category.",
   }),
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-  amount: z.string().nonempty({ message: "Amount is required." }),
+  amount: z
+    .string()
+    .nonempty({ message: "Amount is required." })
+    .refine(
+      (value) => {
+        const num = parseFloat(value);
+        return !isNaN(num) && num >= 0;
+      },
+      { message: "Amount cannot be negative." }
+    ),
 });
 
 // Colors for each category in the chart
@@ -110,8 +130,17 @@ export default function Home() {
   };
 
   // Handle delete transaction
-  const handleDelete = () => {
-    console.log("delete button pressed");
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.delete(`/api/transactions?id=${id}`);
+      console.log("Transaction deleted:", response.data);
+
+      // Refresh transactions
+      const updatedResponse = await axios.get("/api/transactions");
+      setTransactions(updatedResponse.data);
+    } catch (error) {
+      console.error("Error deleting transaction:", error.response?.data || error.message);
+    }
   };
 
   // Prepare data for the stacked bar chart
@@ -276,7 +305,7 @@ export default function Home() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={handleDelete}
+                    onClick={()=> handleDelete(txn._id.toString())}
                   >
                     Delete
                   </Button>
