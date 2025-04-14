@@ -5,6 +5,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+
+
 import {
   Form,
   FormControl,
@@ -13,6 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -24,13 +36,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+const categories = ["Food", "Transport", "Entertainment", "Bills", "Other"];
+
+
 // Define the form schema for transactions
 const formSchema = z.object({
   date: z.string().nonempty({ message: "Date is required." }),
-  category: z.string().min(2, { message: "Category must be at least 2 characters." }),
+  category: z.enum(categories, {
+     message: "Please select a category." ,
+  }),
+
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   amount: z.string().nonempty({ message: "Amount is required." }),
 });
+
 
 export default function Home() {
   // Initialize form with react-hook-form and zod
@@ -73,8 +92,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-24">
-      <h1 className="text-2 encapsulating the form and table rendering logic within the Home component. xl font-bold mb-8">Expense Tracker</h1>
-
+      <h1 className="text-2xl font-bold mb-8">Expense Tracker</h1>
       {/* Form for adding transactions */}
       <Form {...form}>
         <form
@@ -101,7 +119,20 @@ export default function Home() {
               <FormItem>
                 <FormLabel>Category</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Food" {...field} />
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger className="w-full max-w-md">
+                    <SelectValue placeholder="Select a Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+
                 </FormControl>
                 <FormMessage />
               </FormItem>
