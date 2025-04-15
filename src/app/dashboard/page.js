@@ -83,7 +83,7 @@ export default function Dashboard() {
         .slice(0, 5);
 
     return (
-        <main className="flex min-h-screen flex-col items-center p-24">
+        <main className="flex min-h-screen flex-col items-center p-5">
             <h1 className="text-2xl font-bold mb-8">Expense Dashboard</h1>
 
             {loading ? (

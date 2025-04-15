@@ -5,6 +5,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner"
+
+
+
+
 import {
   Select,
   SelectContent,
@@ -43,6 +48,7 @@ import {
 import axios from "axios";
 
 const categories = ["Food", "Transport", "Entertainment", "Bills", "Other"];
+
 
 // Define the form schema for transactions
 const formSchema = z.object({
@@ -124,10 +130,17 @@ export default function Home() {
 
       // Reset form
       form.reset();
+      toast("Event has been created.",{
+        description: "Transaction has been added successfully.",
+        duration: 5000,
+      })
+
+          
     } catch (error) {
       console.error("Error saving transaction:", error.response?.data || error.message);
     }
   };
+
 
   // Handle delete transaction
   const handleDelete = async (id) => {
@@ -138,6 +151,10 @@ export default function Home() {
       // Refresh transactions
       const updatedResponse = await axios.get("/api/transactions");
       setTransactions(updatedResponse.data);
+      toast("Delete Successful !!",{
+        description: "Transaction has been deleted successfully.",
+        duration: 5000,
+      })
     } catch (error) {
       console.error("Error deleting transaction:", error.response?.data || error.message);
     }
@@ -162,7 +179,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
+    <main className="flex min-h-screen flex-col items-center p-5">
       <h1 className="text-2xl font-bold mb-8">Expense Tracker</h1>
 
       {/* Form and Chart Container */}
@@ -280,8 +297,8 @@ export default function Home() {
       </div>
 
       {/* Table for displaying transactions */}
-      <Table className="mt-8 w-full max-w-4xl">
-        <TableCaption>A list of your Transactions.</TableCaption>
+        <h3 className="text-lg font-semibold mx-4 my-4">Transaction History</h3>
+      <Table className="mt-8 w-90% mx-auto ">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Date</TableHead>
@@ -305,7 +322,11 @@ export default function Home() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={()=> handleDelete(txn._id.toString())}
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to delete this transaction?")) {
+                        handleDelete(txn._id.toString());
+                      }
+                    }}
                   >
                     Delete
                   </Button>
