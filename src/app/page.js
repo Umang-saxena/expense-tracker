@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner"
+import Navbar from "@/components/Navbar"
 
 
 
@@ -179,7 +180,8 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-5">
+    <main className="flex min-h-screen flex-col items-center p-15">
+      <Navbar />
       <h1 className="text-2xl font-bold mb-8">Expense Tracker</h1>
 
       {/* Form and Chart Container */}

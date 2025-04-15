@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Navbar from "@/components/Navbar";
+
 import {
     Card,
     CardContent,
@@ -84,6 +86,7 @@ export default function Dashboard() {
 
     return (
         <main className="flex min-h-screen flex-col items-center p-5">
+            <Navbar/>
             <h1 className="text-2xl font-bold mb-8">Expense Dashboard</h1>
 
             {loading ? (
