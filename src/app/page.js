@@ -32,7 +32,7 @@ export default function Home() {
         const response = await axios.get("/api/transactions");
         setTransactions(response.data);
       } catch (error) {
-        console.error("Error fetching transactions:", error.response?.data || error.message);
+        // console.error("Error fetching transactions:", error.response?.data || error.message);
         toast("Error.", {
           description: "Failed to load transactions.",
           duration: 5000,
@@ -46,10 +46,10 @@ export default function Home() {
 
   // Handle form submission
   const onSubmit = async (values) => {
-    console.log("Form values:", values);
+    // console.log("Form values:", values);
     try {
       const response = await axios.post("/api/transactions", values);
-      console.log("Transaction saved:", response.data);
+      // console.log("Transaction saved:", response.data);
       const updatedResponse = await axios.get("/api/transactions");
       setTransactions(updatedResponse.data);
       toast("Event has been created.", {
@@ -57,7 +57,7 @@ export default function Home() {
         duration: 5000,
       });
     } catch (error) {
-      console.error("Error saving transaction:", error.response?.data || error.message);
+      // console.error("Error saving transaction:", error.response?.data || error.message);
       toast("Error.", {
         description: "Failed to save transaction.",
         duration: 5000,
@@ -69,7 +69,7 @@ export default function Home() {
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`/api/transactions?id=${id}`);
-      console.log("Transaction deleted:", response.data);
+      // console.log("Transaction deleted:", response.data);
       const updatedResponse = await axios.get("/api/transactions");
       setTransactions(updatedResponse.data);
       toast("Delete Successful !!", {
