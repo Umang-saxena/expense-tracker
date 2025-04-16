@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Navbar from "@/components/Navbar";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Card,
     CardContent,
@@ -31,11 +31,11 @@ const categories = ["Food", "Transport", "Entertainment", "Bills", "Other"];
 
 // Colors matching src/app/page.js
 const categoryColors = {
-    Food: "#4f46e5", // Indigo
-    Transport: "#22c55e", // Green
-    Entertainment: "#ef4444", // Red
-    Bills: "#f59e0b", // Amber
-    Other: "#6b7280", // Gray
+    Food: "#4f46e5",
+    Transport: "#22c55e",
+    Entertainment: "#ef4444",
+    Bills: "#f59e0b",
+    Other: "#6b7280",
 };
 
 export default function Dashboard() {
@@ -77,7 +77,7 @@ export default function Dashboard() {
                 .filter((txn) => txn.category === category)
                 .reduce((sum, txn) => sum + Number(txn.amount), 0),
         }))
-        .filter((data) => data.value > 0); // Exclude zero values
+        .filter((data) => data.value > 0);
 
     // Get most recent transactions (last 5)
     const recentTransactions = transactions
@@ -86,18 +86,75 @@ export default function Dashboard() {
 
     return (
         <main className="flex min-h-screen flex-col items-center p-5">
-            <Navbar/>
+            <Navbar />
             <h1 className="text-2xl font-bold mb-8">Expense Dashboard</h1>
 
             {loading ? (
-                <p className="text-gray-500">Loading...</p>
+                <div className="w-full max-w-4xl space-y-8">
+                    {/* Skeleton for Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-[150px]" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-[120px] w-full" />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-[150px]" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-[120px] w-full" />
+                            </CardContent>
+                        </Card>
+                    </div>
+                    {/* Skeleton for Pie Chart and Table */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-[150px]" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-[300px] w-full" />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-[150px]" />
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead><Skeleton className="h-4 w-[80px]" /></TableHead>
+                                            <TableHead><Skeleton className="h-4 w-[100px]" /></TableHead>
+                                            <TableHead><Skeleton className="h-4 w-[150px]" /></TableHead>
+                                            <TableHead><Skeleton className="h-4 w-[80px] ml-auto" /></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {Array(3).fill(0).map((_, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             ) : transactions.length === 0 ? (
                 <p className="text-gray-500">No transactions found.</p>
             ) : (
                 <div className="w-full max-w-4xl space-y-8">
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Total Expenses Card */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Total Expenses</CardTitle>
@@ -106,8 +163,6 @@ export default function Dashboard() {
                                 <p className="text-2xl font-semibold">${totalExpenses}</p>
                             </CardContent>
                         </Card>
-
-                        {/* Category Breakdown Card */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Category Breakdown</CardTitle>
@@ -124,10 +179,8 @@ export default function Dashboard() {
                             </CardContent>
                         </Card>
                     </div>
-
                     {/* Pie Chart and Recent Transactions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Pie Chart */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Expenses by Category</CardTitle>
@@ -161,8 +214,6 @@ export default function Dashboard() {
                                 )}
                             </CardContent>
                         </Card>
-
-                        {/* Recent Transactions */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Recent Transactions</CardTitle>
@@ -181,7 +232,13 @@ export default function Dashboard() {
                                         {recentTransactions.length > 0 ? (
                                             recentTransactions.map((txn) => (
                                                 <TableRow key={txn._id.toString()}>
-                                                    <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        {new Date(txn.date).toLocaleDateString("en-US", {
+                                                            year: "numeric",
+                                                            month: "2-digit",
+                                                            day: "2-digit",
+                                                        })}
+                                                    </TableCell>
                                                     <TableCell>{txn.category}</TableCell>
                                                     <TableCell>{txn.description}</TableCell>
                                                     <TableCell className="text-right">

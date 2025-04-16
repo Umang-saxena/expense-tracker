@@ -5,12 +5,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"
-import Navbar from "@/components/Navbar"
-
-
-
-
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import Navbar from "@/components/Navbar";
 import {
   Select,
   SelectContent,
@@ -50,7 +47,6 @@ import axios from "axios";
 
 const categories = ["Food", "Transport", "Entertainment", "Bills", "Other"];
 
-
 // Define the form schema for transactions
 const formSchema = z.object({
   date: z
@@ -60,7 +56,7 @@ const formSchema = z.object({
       (date) => {
         const inputDate = new Date(date);
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize to start of day
+        today.setHours(0, 0, 0, 0);
         return inputDate <= today;
       },
       { message: "Date cannot be in the future." }
@@ -83,15 +79,14 @@ const formSchema = z.object({
 
 // Colors for each category in the chart
 const categoryColors = {
-  Food: "#4f46e5", // Indigo
-  Transport: "#22c55e", // Green
-  Entertainment: "#ef4444", // Red
-  Bills: "#f59e0b", // Amber
-  Other: "#6b7280", // Gray
+  Food: "#4f46e5",
+  Transport: "#22c55e",
+  Entertainment: "#ef4444",
+  Bills: "#f59e0b",
+  Other: "#6b7280",
 };
 
 export default function Home() {
-  // Initialize form with react-hook-form and zod
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -102,17 +97,24 @@ export default function Home() {
     },
   });
 
-  // State to store transactions
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch transactions from MongoDB
+  // Fetch transactions
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
+        setLoading(true);
         const response = await axios.get("/api/transactions");
         setTransactions(response.data);
       } catch (error) {
         console.error("Error fetching transactions:", error.response?.data || error.message);
+        toast("Error.", {
+          description: "Failed to load transactions.",
+          duration: 5000,
+        });
+      } finally {
+        setLoading(false);
       }
     };
     fetchTransactions();
@@ -124,46 +126,45 @@ export default function Home() {
     try {
       const response = await axios.post("/api/transactions", values);
       console.log("Transaction saved:", response.data);
-
-      // Refresh transactions
       const updatedResponse = await axios.get("/api/transactions");
       setTransactions(updatedResponse.data);
-
-      // Reset form
       form.reset();
-      toast("Event has been created.",{
+      toast("Event has been created.", {
         description: "Transaction has been added successfully.",
         duration: 5000,
-      })
-
-          
+      });
     } catch (error) {
       console.error("Error saving transaction:", error.response?.data || error.message);
+      toast("Error.", {
+        description: "Failed to save transaction.",
+        duration: 5000,
+      });
     }
   };
-
 
   // Handle delete transaction
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`/api/transactions?id=${id}`);
       console.log("Transaction deleted:", response.data);
-
-      // Refresh transactions
       const updatedResponse = await axios.get("/api/transactions");
       setTransactions(updatedResponse.data);
-      toast("Delete Successful !!",{
+      toast("Delete Successful !!", {
         description: "Transaction has been deleted successfully.",
         duration: 5000,
-      })
+      });
     } catch (error) {
       console.error("Error deleting transaction:", error.response?.data || error.message);
+      toast("Error.", {
+        description: "Failed to delete transaction.",
+        duration: 5000,
+      });
     }
   };
 
   // Prepare data for the stacked bar chart
   const chartData = transactions.reduce((acc, txn) => {
-    const date = new Date(txn.date).toISOString().split("T")[0]; // Format as YYYY-MM-DD
+    const date = new Date(txn.date).toISOString().split("T")[0];
     const existing = acc.find((item) => item.date === date);
 
     if (existing) {
@@ -274,7 +275,9 @@ export default function Home() {
         {/* Stacked Bar Chart */}
         <div className="w-full md:w-1/2">
           <h2 className="text-lg font-semibold mb-4">Expenses by Category</h2>
-          {chartData.length > 0 ? (
+          {loading ? (
+            <Skeleton className="w-full h-[300px]" />
+          ) : chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -299,8 +302,8 @@ export default function Home() {
       </div>
 
       {/* Table for displaying transactions */}
-        <h3 className="text-lg font-semibold mx-4 my-4">Transaction History</h3>
-      <Table className="mt-8 w-90% mx-auto ">
+      <h3 className="text-lg font-semibold mx-4 my-4">Transaction History</h3>
+      <Table className="mt-8 w-[90%] mx-auto">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Date</TableHead>
@@ -311,10 +314,38 @@ export default function Home() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.length > 0 ? (
+          {loading ? (
+            Array(3)
+              .fill(0)
+              .map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-[80px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-[100px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-[150px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-[80px] ml-auto" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-8 w-[80px] ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))
+          ) : transactions.length > 0 ? (
             transactions.map((txn) => (
               <TableRow key={txn._id.toString()}>
-                <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {new Date(txn.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  })}
+                </TableCell>
                 <TableCell>{txn.category}</TableCell>
                 <TableCell>{txn.description}</TableCell>
                 <TableCell className="text-right">
