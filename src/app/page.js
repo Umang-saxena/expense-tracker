@@ -1,81 +1,15 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import TransactionForm from "@/components/TransactionForm";
+import TransactionsTable from "@/components/TransactionsTable";
+import ChartWrapper from "@/components/ChartWrapper";
 import axios from "axios";
 
 const categories = ["Food", "Transport", "Entertainment", "Bills", "Other"];
-
-// Define the form schema for transactions
-const formSchema = z.object({
-  date: z
-    .string()
-    .nonempty({ message: "Date is required." })
-    .refine(
-      (date) => {
-        const inputDate = new Date(date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return inputDate <= today;
-      },
-      { message: "Date cannot be in the future." }
-    ),
-  category: z.enum(categories, {
-    message: "Please select a category.",
-  }),
-  description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-  amount: z
-    .string()
-    .nonempty({ message: "Amount is required." })
-    .refine(
-      (value) => {
-        const num = parseFloat(value);
-        return !isNaN(num) && num >= 0;
-      },
-      { message: "Amount cannot be negative." }
-    ),
-});
 
 // Colors for each category in the chart
 const categoryColors = {
@@ -87,16 +21,6 @@ const categoryColors = {
 };
 
 export default function Home() {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      date: "",
-      category: "",
-      description: "",
-      amount: "",
-    },
-  });
-
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -128,7 +52,6 @@ export default function Home() {
       console.log("Transaction saved:", response.data);
       const updatedResponse = await axios.get("/api/transactions");
       setTransactions(updatedResponse.data);
-      form.reset();
       toast("Event has been created.", {
         description: "Transaction has been added successfully.",
         duration: 5000,
@@ -162,7 +85,7 @@ export default function Home() {
     }
   };
 
-  // Prepare data for the stacked bar chart
+  // Prepare data for the chart
   const chartData = transactions.reduce((acc, txn) => {
     const date = new Date(txn.date).toISOString().split("T")[0];
     const existing = acc.find((item) => item.date === date);
@@ -189,192 +112,42 @@ export default function Home() {
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
         {/* Form for adding transactions */}
         <div className="w-full md:w-1/2">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6 w-full"
-            >
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a Category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Paid for tea" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="e.g., 252"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">
-                Add Transaction
-              </Button>
-            </form>
-          </Form>
+          {loading ? (
+            <Skeleton className="h-[400px] w-full" />
+          ) : (
+            <TransactionForm
+              onSubmit={onSubmit}
+              defaultValues={{ date: "", category: "", description: "", amount: "" }}
+              useNativeSelect={false}
+              resetAfterSubmit={true}
+            />
+          )}
         </div>
 
-        {/* Stacked Bar Chart */}
+        {/* Chart */}
         <div className="w-full md:w-1/2">
           <h2 className="text-lg font-semibold mb-4">Expenses by Category</h2>
-          {loading ? (
-            <Skeleton className="w-full h-[300px]" />
-          ) : chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                {categories.map((category) => (
-                  <Bar
-                    key={category}
-                    dataKey={category}
-                    stackId="a"
-                    fill={categoryColors[category]}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-gray-500">No data to display.</p>
-          )}
+          <ChartWrapper
+            type="bar"
+            data={chartData}
+            loading={loading}
+            categories={categories}
+            categoryColors={categoryColors}
+            config={{ xAxisKey: "date", stacked: true }}
+          />
         </div>
       </div>
 
-      {/* Table for displaying transactions */}
-      <h3 className="text-lg font-semibold mx-4 my-4">Transaction History</h3>
-      <Table className="mt-8 w-[90%] mx-auto">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Date</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array(3)
-              .fill(0)
-              .map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[80px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[100px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[150px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[80px] ml-auto" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-[80px] ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))
-          ) : transactions.length > 0 ? (
-            transactions.map((txn) => (
-              <TableRow key={txn._id.toString()}>
-                <TableCell>
-                  {new Date(txn.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                  })}
-                </TableCell>
-                <TableCell>{txn.category}</TableCell>
-                <TableCell>{txn.description}</TableCell>
-                <TableCell className="text-right">
-                  ${Number(txn.amount).toFixed(2)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      if (window.confirm("Are you sure you want to delete this transaction?")) {
-                        handleDelete(txn._id.toString());
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center">
-                No transactions found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      {/* Transactions Table */}
+      <div className="mt-8 w-[90%] mx-auto">
+        <h3 className="text-lg font-semibold my-4">Transaction History</h3>
+        <TransactionsTable
+          transactions={transactions}
+          loading={loading}
+          onDelete={handleDelete}
+          caption="Transaction History"
+        />
+      </div>
     </main>
   );
 }

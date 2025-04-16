@@ -10,14 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import TransactionsTable from "@/components/TransactionsTable";
 import {
     PieChart,
     Pie,
@@ -125,26 +118,12 @@ export default function Dashboard() {
                                 <Skeleton className="h-6 w-[150px]" />
                             </CardHeader>
                             <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead><Skeleton className="h-4 w-[80px]" /></TableHead>
-                                            <TableHead><Skeleton className="h-4 w-[100px]" /></TableHead>
-                                            <TableHead><Skeleton className="h-4 w-[150px]" /></TableHead>
-                                            <TableHead><Skeleton className="h-4 w-[80px] ml-auto" /></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {Array(3).fill(0).map((_, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <TransactionsTable
+                                    transactions={[]}
+                                    loading={true}
+                                    onDelete={null}
+                                    caption="Recent Transactions"
+                                />
                             </CardContent>
                         </Card>
                     </div>
@@ -219,42 +198,12 @@ export default function Dashboard() {
                                 <CardTitle>Recent Transactions</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Category</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {recentTransactions.length > 0 ? (
-                                            recentTransactions.map((txn) => (
-                                                <TableRow key={txn._id.toString()}>
-                                                    <TableCell>
-                                                        {new Date(txn.date).toLocaleDateString("en-US", {
-                                                            year: "numeric",
-                                                            month: "2-digit",
-                                                            day: "2-digit",
-                                                        })}
-                                                    </TableCell>
-                                                    <TableCell>{txn.category}</TableCell>
-                                                    <TableCell>{txn.description}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        ${Number(txn.amount).toFixed(2)}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="text-center">
-                                                    No recent transactions.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                <TransactionsTable
+                                    transactions={recentTransactions}
+                                    loading={false}
+                                    onDelete={null}
+                                    caption="Recent Transactions"
+                                />
                             </CardContent>
                         </Card>
                     </div>
